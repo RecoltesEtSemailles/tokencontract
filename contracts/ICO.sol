@@ -128,6 +128,7 @@ contract CCOIN is ERC20, SafeMath, Ownable {
     event StoppedCrowdsale();
     event RestartedCrowdsale();
     event Burned(uint256 value);
+    event PrivateSale(address indexed investor, uint256 amountTokens);
 
     // Lock transfer during the ICO
     modifier onlyUnlocked() {
@@ -302,6 +303,19 @@ contract CCOIN is ERC20, SafeMath, Ownable {
     function restartCrowdsale() external onlyOwner{
         stopInEmergency = false;
         emit RestartedCrowdsale();
+    }
+    
+    function privateSaleCCOIN(address investor, uint amountTokens) external onlyAuthorized{
+        require(block.number < endBlock);
+        require(investor != address(0));
+        // Automatically whitelists big investors without to have to do it manually
+        whitelisted[investor] = true;
+        require(safeAdd(totalTokensSent, amountTokens) <= maxCap);
+        // Send the investor the expected amount
+        balances[investor] = safeAdd(balances[investor], amountTokens);
+        // Emit events
+        emit Whitelist(investor);
+        emit PrivateSale(investor, amountTokens);
     }
 
 }
